@@ -18,7 +18,7 @@ if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 
 //=====================================================================================
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+var camera = new THREE.PerspectiveCamera(120, window.innerWidth / window.innerHeight, 0.1, 1000)
 var renderer = new THREE.WebGLRenderer({ alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor( 0x000000, 0 ); // the default
@@ -35,64 +35,54 @@ var eggMaterial = new THREE.MeshNormalMaterial( { wireframe: true } );
 var egg = new THREE.Mesh(eggGeometry, eggMaterial);
 scene.add(egg);
 
-var ax, ay, az, vx, vy, vz;
 var px = 0
 var py = 0
 var pz = 5
+var vx = 0
+var vy = 0
+var vz = 0
 
 camera.position.z = 5
 function handleMotionEvent(event) {
-	var a0x = ax || 0
-	var a0y = ay || 0
-	var a0z = az || 0
+
 	var v0x = vx || 0
 	var v0y = vy || 0
 	var v0z = vz || 0
 
-  ax = event.acceleration.x;
-  ay = event.acceleration.y;
-  az = event.acceleration.z;
-  var interval = event.interval/10;
-	
+  var ax = event.acceleration.x;
+  var ay = event.acceleration.y;
+  var az = event.acceleration.z;
+  var interval = event.interval/100;
 
-	vx = ((ax - a0x) * interval) + v0x
-	vy = ((ay - a0y) * interval) + v0y
-	vz = ((az - a0z) * interval) + v0z
+	vx += ((ax) * interval)
+	vy += ((ay) * interval)
+	vz += ((az) * interval)
 
-	px = ((vx - v0x) * interval * 2) + px
-	py = ((vy - v0y) * interval * 2) + py
-	pz = ((vz - v0z) * interval * 2) + pz
+	// assuming constant acceleration  a over the time period of interval
+	// position = 1/2(a * t^2) + (v0 * t) + p0
+	px += ((v0x) * interval) + (interval * interval * ax / 2)
+	py += ((v0y) * interval) + (interval * interval * ay / 2)
+	pz += ((v0z) * interval) + (interval * interval * az / 2)
 
-	// console.log("px: ", px)
-	// console.log("py: ", py)
-	// console.log("pz: ", pz)
   // var ralpha = event.rotationRate.alpha;
   // var rbeta = event.rotationRate.beta;
   // var rgamma = event.rotationRate.gamma;
-				
 
-	
-	// console.log("x: ", ax)
-	// console.log("y: ", ay)
-	// console.log("z: ", az)
-
-	// console.log("interval: ", interval)
-	//do something here
 }
+window.addEventListener('devicemotion', handleMotionEvent, true); 
 
 function render() {
 	requestAnimationFrame(render);
-	egg.rotation.x += 0.01
-	egg.rotation.y += 0.01
-
-	console.log(px)
+	// egg.rotation.x += 0.01
+	// egg.rotation.y += 0.01
 
 	camera.position.x = px
 	camera.position.y = py
 	camera.position.z = pz
 
-	console.log(pz)
-	window.addEventListener('devicemotion', handleMotionEvent, true); 
+	console.log("px: ", px)
+	console.log("py: ", py)
+	console.log("pz: ", pz)
 
 
 	renderer.render(scene, camera)
